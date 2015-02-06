@@ -4,6 +4,7 @@ package org.aursir;
 import com.google.gson.Gson;
 import org.aursir.aursir4j.AppKey;
 import org.aursir.aursir4j.ExportedAppkey;
+import org.aursir.aursir4j.ImportedAppkey;
 import org.aursir.aursir4j.Interface;
 import org.aursir.aursir4j.messages.DockMessage;
 import org.aursir.aursir4j.messages.Message;
@@ -42,16 +43,8 @@ public class Importertest {
         AppKey key = new AppKey();
 
         AppKey HelloWorldKey = key.fromJson(testkey);
-        ExportedAppkey exp = iface.AddExport(HelloWorldKey);
-        Request req = exp.WaitForRequest();
-        System.out.println("REQUEST!!!");
-        System.out.println(req.Request);
-        hellorreq hellomsg = req.Decode(hellorreq.class);
-        System.out.println(hellomsg.Greeting);
+        ImportedAppkey imp = iface.AddImport(HelloWorldKey);
 
-        hellorrep rep = new hellorrep();
-        rep.Answer = "Hello from Aursir4J";
-        exp.Reply(req,rep);
         try {
             Thread.sleep(20000);
         } catch (InterruptedException e) {

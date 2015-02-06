@@ -9,17 +9,18 @@ import org.aursir.aursir4j.AppKey;
 public class ExportAddedMessage implements Message {
     public AppKey AppKey ;
     public String[] Tags;
-    public String ExportId="";
+    public String ExportId;
 
-    public ExportAddedMessage(AppKey key, String[] tags){
+    public ExportAddedMessage(AppKey key, String[] tags, String ExportId){
         this.AppKey = key;
         this.Tags=tags;
+        this.ExportId=ExportId;
     }
 
 
     @Override
     public int GetMessageType() {
-        return Calltypes.types.ADD_EXPORT.ordinal();
+        return Calltypes.types.EXPORT_ADDED.ordinal();
     }
 
     @Override

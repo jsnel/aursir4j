@@ -11,27 +11,37 @@ import org.zeromq.ZMQ;
  */
 public class ImportedAppkey {
 
-    private String exportid;
+    private String importid;
 
-    private ZMQ.Socket requestskt;
+
+    private ZMQ.Socket listenskt;
 
     private ActorRef outChan;
 
+    private AppKey appKey;
 
-    public ImportedAppkey(String exportid, ZMQ.Context ctx, ActorRef outChan){
-        this.exportid = exportid;
+    private String[] tags;
+
+    public ImportedAppkey(String importid, AppKey appKey, String[] tags,ZMQ.Context ctx, ActorRef outChan){
+        this.importid = importid;
         this.outChan = outChan;
-        this.requestskt = ctx.socket(ZMQ.PAIR);
-        this.requestskt.connect("inproc://exportreq_" + exportid);
+        this.appKey = appKey;
+        this.tags = tags;
+        this.listenskt = ctx.socket(ZMQ.PAIR);
+        this.listenskt.connect("inproc://listen" + importid);
     }
 
-    public Request WaitForRequest(){
-        String reqm = this.requestskt.recvStr();
+    public Result Listen(){
+        String reqm = this.listenskt.recvStr();
         Gson gson = new Gson();
-        return gson.fromJson(reqm, Request.class);
+        return gson.fromJson(reqm, Result.class);
     }
 
-    public void Reply(Request request, Object reply) {
-        this.outChan.tell(new Result(request, reply), ActorRef.noSender());
+    public Request CallFunction(String functionName, int callType,Object request) {
+
+        Request req = new Request(this.appKey.ApplicationKeyName,functionName,callType,this.tags, request);
+
+        this.outChan.tell(req, ActorRef.noSender());
+        return req;
     }
 }

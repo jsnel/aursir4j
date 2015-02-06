@@ -15,32 +15,40 @@ public class Result implements Message {
     public String Uuid;
     public String ImportId;
     public String ExportId;
-    public String Timestamp;
-    public String Codec;
-    public String Request;
-    public boolean Stream;
-    public boolean StreamFinished;
+    //public String Timestamp = "";
+    public String Codec="JSON";
+    public String Result;
+    public boolean Stream=false;
+    public boolean StreamFinished=true;
 
     public Result(){}
 
-    public Result(String appKeyName, String functionName, int callType,
-                  String[] tags, Object Request){
-          this.AppKeyName = appKeyName;
-        this.FunctionName = functionName;
-        this.CallType = callType;
-        this.Tags = tags;
+    public Result(Request request, Object Result){
+          this.AppKeyName = request.AppKeyName;
+        this.FunctionName = request.FunctionName;
+        this.CallType = request.CallType;
+        this.Tags = request.Tags;
+        this.Uuid = request.Uuid;
+        this.ImportId = request.ImportId;
+        this.ExportId = request.ExportId;
+        Gson gson = new Gson();
+        String json = gson.toJson(Result);
+
+        this.Result = DatatypeConverter.printBase64Binary(json.getBytes());
 
     }
 
     @Override
     public int GetMessageType() {
-        return Calltypes.types.ADD_EXPORT.ordinal();
+        return Calltypes.types.RESULT.ordinal();
     }
 
     @Override
     public String GetEncoded() {
         Gson gson = new Gson();
         String json = gson.toJson(this);
+        System.out.println(json);
+
         return json;
     }
 
@@ -51,7 +59,7 @@ public class Result implements Message {
 
     public <T> T Decode(Class<T> type) {
         Gson gson = new Gson();
-        byte[] req = DatatypeConverter.parseBase64Binary(this.Request);
+        byte[] req = DatatypeConverter.parseBase64Binary(this.Result);
         return gson.fromJson(new String(req),type);
     }
 }

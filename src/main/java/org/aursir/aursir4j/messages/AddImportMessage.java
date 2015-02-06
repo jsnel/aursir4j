@@ -11,6 +11,8 @@ public class AddImportMessage implements Message {
     public String[] Tags;
     public String ImportId="";
 
+    public AddImportMessage(){}
+
     public AddImportMessage(AppKey key, String[] tags){
         this.AppKey = key;
         this.Tags=tags;

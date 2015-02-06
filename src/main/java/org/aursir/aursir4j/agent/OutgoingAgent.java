@@ -54,6 +54,8 @@ public class OutgoingAgent extends UntypedActor {
         Message tmp = (Message) message;
         this.skt.sendMore(String.format("%d",tmp.GetMessageType()));
         this.skt.sendMore(tmp.GetCodec());
+        System.out.println(tmp.GetEncoded());
+
         this.skt.sendMore(tmp.GetEncoded());
         this.skt.sendMore(String.format("%d", this.port));
         this.skt.send(this.ip);

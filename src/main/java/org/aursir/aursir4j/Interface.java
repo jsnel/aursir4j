@@ -55,19 +55,27 @@ public class Interface {
 
     }
 
+    public ExportedAppkey AddExport(AppKey key){
+        String[] tags = new String[]{};
+        return this.AddExport(key,tags);
+    }
     public ExportedAppkey AddExport(AppKey key, String[] tags){
         AddExportMessage m = new AddExportMessage(key,tags);
         this.outChan.tell(m, ActorRef.noSender());
         String eid = this.addexportskt.recvStr();
-        ExportedAppkey ea = new ExportedAppkey(eid);
+        ExportedAppkey ea = new ExportedAppkey(eid,this.ctx,this.outChan);
         return ea;
+    }
+    public ImportedAppkey AddImport(AppKey key){
+        String[] tags = new String[]{};
+        return this.AddImport(key,tags);
     }
 
     public ImportedAppkey AddImport(AppKey key, String[] tags){
         AddImportMessage m = new AddImportMessage(key,tags);
         this.outChan.tell(m, ActorRef.noSender());
         String iid = this.addimportskt.recvStr();
-        ImportedAppkey ia = new ImportedAppkey(iid);
+        ImportedAppkey ia = new ImportedAppkey(iid,key,tags,this.ctx,this.outChan);
         return ia;
     }
 
@@ -93,7 +101,6 @@ public class Interface {
         this.inChan = system.actorOf(IncomingAgent.props( this.ctx, port));
         this.outChan = system.actorOf(OutgoingAgent.props(this.uuid,this.ctx,port,"127.0.0.1"));
         this.inChan.tell("", ActorRef.noSender());
-
     }
 
     public void stop(){
