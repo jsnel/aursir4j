@@ -1,4 +1,4 @@
-package org.aursir.aursir4j.messages;
+package org.aursir.aursir4j;
 
 /**
  * Created by joern on 2/1/15.

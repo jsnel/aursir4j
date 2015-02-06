@@ -18,7 +18,7 @@ public class DockMessage implements Message {
 
     @Override
     public int GetMessageType() {
-        return 0;
+        return MsgTypes.types.DOCK.ordinal();
     }
 
     @Override

@@ -1,7 +1,7 @@
 package org.aursir.aursir4j.messages;
 
 import com.google.gson.Gson;
-import org.aursir.aursir4j.AppKey;
+import org.zeromq.ZMQ;
 
 import javax.xml.bind.DatatypeConverter;
 
@@ -20,22 +20,27 @@ public class Request implements Message {
     public String Codec="JSON";
     public String Request;
     public boolean Stream=false;
-    public boolean StreamFinished=false;
+    public boolean StreamFinished=true;
+
+    private static ZMQ.Socket resultsock;
 
     public Request(){}
 
-    public Request(String appKeyName,String functionName, int callType,
-                   String[] tags, Object Request){
+    public Request(String appKeyName,String functionName, String uuid, String importId, int callType,
+                   String[] tags, Object Request, ZMQ.Socket resultsock){
           this.AppKeyName = appKeyName;
         this.FunctionName = functionName;
+        this.Uuid=uuid;
+        this.ImportId = importId;
         this.CallType = callType;
         this.Tags = tags;
+        this.resultsock = resultsock;
 
     }
 
     @Override
     public int GetMessageType() {
-        return Calltypes.types.REQUEST.ordinal();
+        return MsgTypes.types.REQUEST.ordinal();
     }
 
     @Override
@@ -54,5 +59,11 @@ public class Request implements Message {
         Gson gson = new Gson();
         byte[] req = DatatypeConverter.parseBase64Binary(this.Request);
         return gson.fromJson(new String(req),type);
+    }
+
+    public Result WaitForResult(){
+        String reqm = this.resultsock.recvStr();
+        Gson gson = new Gson();
+        return gson.fromJson(reqm, Result.class);
     }
 }

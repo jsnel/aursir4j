@@ -1,15 +1,9 @@
-package org.aursir;
+package example.exampleImporter;
 
 
-import com.google.gson.Gson;
-import org.aursir.aursir4j.AppKey;
-import org.aursir.aursir4j.ExportedAppkey;
-import org.aursir.aursir4j.ImportedAppkey;
-import org.aursir.aursir4j.Interface;
-import org.aursir.aursir4j.messages.DockMessage;
-import org.aursir.aursir4j.messages.Message;
-import org.aursir.aursir4j.messages.Request;
-import org.aursir.aursir4j.messages.hellorrep;
+import org.aursir.aursir4j.*;
+import org.aursir.aursir4j.messages.*;
+import org.aursir.hellorreq;
 
 public class Importertest {
 
@@ -31,19 +25,20 @@ public class Importertest {
                 "    ]\n" +
                 "}";
 
-        Message msg = new DockMessage("testapp",false);
-        System.out.println(msg.GetCodec());
-        System.out.println(msg.GetMessageType());
-        System.out.println(msg.GetEncoded());
-        Gson gson = new Gson();
-        DockMessage msg2 = gson.fromJson(msg.GetEncoded(), DockMessage.class);
-        System.out.println(msg2.GetEncoded());
+
         Interface iface = new Interface("Testapp");
 
         AppKey key = new AppKey();
 
         AppKey HelloWorldKey = key.fromJson(testkey);
         ImportedAppkey imp = iface.AddImport(HelloWorldKey);
+        System.out.println(imp.importid);
+        hellorreq hreq = new hellorreq("Hi from AurSir4j");
+        Request req = imp.CallFunction("SayHello", hreq, calltypes.ONE2ONE.ordinal());
+        Result res = req.WaitForResult();
+        hellorrep rep = res.Decode(hellorrep.class);
+        System.out.println("Result");
+        System.out.println(rep.Answer);
 
         try {
             Thread.sleep(20000);
@@ -55,9 +50,6 @@ public class Importertest {
        iface.stop();
     }
 
-    class hellorreq {
-        public String Greeting;
-    }
 
 
 }

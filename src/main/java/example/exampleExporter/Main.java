@@ -1,4 +1,4 @@
-package org.aursir;
+package example.exampleExporter;
 
 
 import com.google.gson.Gson;
@@ -8,7 +8,7 @@ import org.aursir.aursir4j.Interface;
 import org.aursir.aursir4j.messages.DockMessage;
 import org.aursir.aursir4j.messages.Message;
 import org.aursir.aursir4j.messages.Request;
-import org.aursir.aursir4j.messages.hellorrep;
+import org.aursir.aursir4j.hellorrep;
 
 public class Main {
 

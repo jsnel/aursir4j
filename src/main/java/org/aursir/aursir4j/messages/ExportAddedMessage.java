@@ -20,7 +20,7 @@ public class ExportAddedMessage implements Message {
 
     @Override
     public int GetMessageType() {
-        return Calltypes.types.EXPORT_ADDED.ordinal();
+        return MsgTypes.types.EXPORT_ADDED.ordinal();
     }
 
     @Override

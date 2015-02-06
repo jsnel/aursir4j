@@ -6,14 +6,16 @@ import org.aursir.aursir4j.messages.Request;
 import org.aursir.aursir4j.messages.Result;
 import org.zeromq.ZMQ;
 
+import java.util.UUID;
+
 /**
  * Created by joern on 1/25/15.
  */
 public class ImportedAppkey {
 
-    private String importid;
+    public String importid;
 
-
+    private ZMQ.Context ctx;
     private ZMQ.Socket listenskt;
 
     private ActorRef outChan;
@@ -27,6 +29,7 @@ public class ImportedAppkey {
         this.outChan = outChan;
         this.appKey = appKey;
         this.tags = tags;
+        this.ctx = ctx;
         this.listenskt = ctx.socket(ZMQ.PAIR);
         this.listenskt.connect("inproc://listen" + importid);
     }
@@ -37,11 +40,18 @@ public class ImportedAppkey {
         return gson.fromJson(reqm, Result.class);
     }
 
-    public Request CallFunction(String functionName, int callType,Object request) {
+    public Request CallFunction(String functionName,Object request, int callType) {
 
-        Request req = new Request(this.appKey.ApplicationKeyName,functionName,callType,this.tags, request);
+        String uuid = UUID.randomUUID().toString();
+
+        ZMQ.Socket resultskt = ctx.socket(ZMQ.PAIR);
+        resultskt.bind("inproc://result" + uuid);
+
+        Request req = new Request(this.appKey.ApplicationKeyName,functionName,uuid,this.importid,
+                callType,this.tags, request,resultskt);
 
         this.outChan.tell(req, ActorRef.noSender());
         return req;
     }
 }
+

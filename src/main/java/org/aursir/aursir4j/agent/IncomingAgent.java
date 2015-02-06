@@ -4,13 +4,9 @@ import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.japi.Creator;
 import com.google.gson.Gson;
-import org.aursir.aursir4j.messages.Calltypes;
-import org.aursir.aursir4j.messages.DockedMessage;
-import org.aursir.aursir4j.messages.ExportAddedMessage;
-import org.aursir.aursir4j.messages.Request;
+import org.aursir.aursir4j.messages.*;
 import org.zeromq.ZMQ;
 
-import java.net.ServerSocket;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,9 +23,9 @@ public class IncomingAgent extends UntypedActor {
     private ZMQ.Socket dockskt;
     private ZMQ.Socket addexportskt;
     private ZMQ.Socket addimportskt;
-    private Map exportedskts;
-    private Map resultskts;
-    private Map<String,ZMQ.Socket> requestskts;
+    private Map <String,ZMQ.Socket> exportedskts;
+    private Map <String,ZMQ.Socket> functionlistenskts;
+    private Map <String,ZMQ.Socket> requestskts;
 
 
     public static Props props(final ZMQ.Context ctx, final int port) {
@@ -57,7 +53,7 @@ public class IncomingAgent extends UntypedActor {
 
         this.exportedskts = new HashMap();
         this.requestskts = new HashMap();
-        this.resultskts = new HashMap();
+        this.functionlistenskts = new HashMap();
     }
     @Override
     public void preStart() throws Exception {
@@ -92,7 +88,7 @@ public class IncomingAgent extends UntypedActor {
     private void processMsg(String msgtyp,String codec, String msg){
         Gson gson = new Gson();
         int type = Integer.parseInt(msgtyp);
-        switch (Calltypes.types.values()[type]){
+        switch (MsgTypes.types.values()[type]){
             case DOCKED:
                 DockedMessage dm = gson.fromJson(msg,DockedMessage.class);
                 String s = "0";
@@ -108,10 +104,25 @@ public class IncomingAgent extends UntypedActor {
 
                 this.addexportskt.send(eid);
               break;
+            case IMPORT_ADDED:
+                ImportAddedMessage iam = gson.fromJson(msg,ImportAddedMessage.class);
+                String iid = iam.ImportId;
+                this.createFunctionListenSkt(iid);
+                this.createExportedSkt(iid);
+
+                this.addimportskt.send(iid);
+              break;
             case REQUEST:
-                //TODO better waz to deliver result to interface
                 exportid exid = gson.fromJson(msg,exportid.class);
                 this.requestskts.get(exid.ExportId).send(msg);
+            break;
+            case RESULT:
+
+                jobid jid = gson.fromJson(msg,jobid.class);
+                ZMQ.Socket skt = this.ctx.socket(ZMQ.PAIR);
+                skt.connect("inproc://result" + jid.Uuid);
+
+                skt.send(msg);
             break;
 
         }
@@ -126,9 +137,24 @@ public class IncomingAgent extends UntypedActor {
         this.requestskts.put(Id,skt);
 
     }
+    private void createFunctionListenSkt(String Id){
+        ZMQ.Socket skt = this.ctx.socket(ZMQ.PAIR);
+        skt.bind("inproc://functionlisten" + Id);
+        this.functionlistenskts.put(Id,skt);
+
+    }
+    private void createExportedSkt(String Id){
+        ZMQ.Socket skt = this.ctx.socket(ZMQ.PAIR);
+        skt.bind("inproc://exported" + Id);
+        this.exportedskts.put(Id,skt);
+
+    }
 
 
     private class exportid {
         public String ExportId;
+    }
+    private class jobid {
+        public String Uuid;
     }
 }

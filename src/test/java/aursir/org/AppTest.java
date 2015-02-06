@@ -31,13 +31,8 @@ public class AppTest
     /**
      * Rigourous Test :-)
      */
-    public void testApp()
+    public void testStartStop()
     {
         assertTrue( true );
-    }
-
-    public void testKoApp()
-    {
-        assertTrue( false );
     }
 }

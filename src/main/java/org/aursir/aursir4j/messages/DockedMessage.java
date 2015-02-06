@@ -15,7 +15,7 @@ public class DockedMessage implements Message {
 
     @Override
     public int GetMessageType() {
-        return Calltypes.types.DOCKED.ordinal();
+        return MsgTypes.types.DOCKED.ordinal();
     }
 
     @Override

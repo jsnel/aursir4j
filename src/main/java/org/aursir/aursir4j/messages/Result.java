@@ -23,14 +23,14 @@ public class Result implements Message {
 
     public Result(){}
 
-    public Result(Request request, Object Result){
+    public Result(Request request, Object Result, String ExportId){
           this.AppKeyName = request.AppKeyName;
         this.FunctionName = request.FunctionName;
         this.CallType = request.CallType;
         this.Tags = request.Tags;
         this.Uuid = request.Uuid;
         this.ImportId = request.ImportId;
-        this.ExportId = request.ExportId;
+        this.ExportId = ExportId;
         Gson gson = new Gson();
         String json = gson.toJson(Result);
 
@@ -40,7 +40,7 @@ public class Result implements Message {
 
     @Override
     public int GetMessageType() {
-        return Calltypes.types.RESULT.ordinal();
+        return MsgTypes.types.RESULT.ordinal();
     }
 
     @Override
