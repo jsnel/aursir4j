@@ -1,4 +1,4 @@
-package org.aursir.aursir4j;
+package example;
 
 /**
  * Created by joern on 2/1/15.

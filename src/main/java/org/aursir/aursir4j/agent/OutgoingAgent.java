@@ -4,10 +4,10 @@ import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.japi.Creator;
+import org.aursir.aursir4j.messages.LeaveMessage;
 import org.aursir.aursir4j.messages.Message;
 import org.zeromq.ZMQ;
 
-import java.net.ServerSocket;
 import java.util.UUID;
 
 /**
@@ -51,16 +51,25 @@ public class OutgoingAgent extends UntypedActor {
 
     @Override
     public void onReceive(Object message) throws Exception {
-        Message tmp = (Message) message;
-        this.skt.sendMore(String.format("%d",tmp.GetMessageType()));
-        this.skt.sendMore(tmp.GetCodec());
-        System.out.println(tmp.GetEncoded());
+        Message m = (Message) message;
+        this.send(m);
+    }
 
-        this.skt.sendMore(tmp.GetEncoded());
+    @Override
+    public void postStop() throws Exception {
+        LeaveMessage m = new LeaveMessage();
+        this.send(m);
+        this.skt.close();
+        System.out.println("Closed outgoing actor");
+
+        super.postStop();
+    }
+
+    private void send(Message m) {
+        this.skt.sendMore(String.format("%d",m.GetMessageType()));
+        this.skt.sendMore(m.GetCodec());
+        this.skt.sendMore(m.GetEncoded());
         this.skt.sendMore(String.format("%d", this.port));
         this.skt.send(this.ip);
-
-
-
     }
 }

@@ -3,12 +3,10 @@ package org.aursir.aursir4j.agent;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.japi.Creator;
-import org.zeromq.ZMQ;
 
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.util.UUID;
 
 /**
  * Created by joern on 1/25/15.
@@ -55,5 +53,12 @@ public class UdpActor extends UntypedActor {
 
     }
 
+    @Override
+    public void postStop() throws Exception {
+        this.clientSocket.close();
 
+        System.out.println("Stopped udp actor");
+
+        super.postStop();
+    }
 }

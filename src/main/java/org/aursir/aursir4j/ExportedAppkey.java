@@ -32,6 +32,12 @@ public class ExportedAppkey {
     }
 
     public void Reply(Request request, Object reply) {
-        this.outChan.tell(new Result(request,reply,this.exportid), ActorRef.noSender());
+        this.outChan.tell(new Result(request, reply, this.exportid), ActorRef.noSender());
+    }
+
+    public void Remove() {
+        this.requestskt.close();
+        System.out.println("exp closed");
+
     }
 }

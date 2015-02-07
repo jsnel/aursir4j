@@ -1,6 +1,7 @@
 package org.aursir.aursir4j.messages;
 
 import com.google.gson.Gson;
+import org.aursir.aursir4j.calltypes;
 import org.zeromq.ZMQ;
 
 import javax.xml.bind.DatatypeConverter;
@@ -36,6 +37,11 @@ public class Request implements Message {
         this.Tags = tags;
         this.resultsock = resultsock;
 
+        Gson gson = new Gson();
+        String json = gson.toJson(Request);
+
+        this.Request = DatatypeConverter.printBase64Binary(json.getBytes());
+
     }
 
     @Override
@@ -64,6 +70,10 @@ public class Request implements Message {
     public Result WaitForResult(){
         String reqm = this.resultsock.recvStr();
         Gson gson = new Gson();
-        return gson.fromJson(reqm, Result.class);
+        Result r = gson.fromJson(reqm, Result.class);
+        if (r.CallType == calltypes.ONE2ONE.ordinal()) {
+            this.resultsock.close();
+        }
+        return r;
     }
 }

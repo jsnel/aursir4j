@@ -53,5 +53,11 @@ public class ImportedAppkey {
         this.outChan.tell(req, ActorRef.noSender());
         return req;
     }
+
+    public void Remove() {
+        this.listenskt.close();
+        System.out.println("imp closed");
+
+    }
 }
 

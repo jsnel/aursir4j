@@ -4,7 +4,10 @@ import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.japi.Creator;
 import com.google.gson.Gson;
-import org.aursir.aursir4j.messages.*;
+import org.aursir.aursir4j.messages.DockedMessage;
+import org.aursir.aursir4j.messages.ExportAddedMessage;
+import org.aursir.aursir4j.messages.ImportAddedMessage;
+import org.aursir.aursir4j.messages.MsgTypes;
 import org.zeromq.ZMQ;
 
 import java.util.HashMap;
@@ -55,28 +58,61 @@ public class IncomingAgent extends UntypedActor {
         this.requestskts = new HashMap();
         this.functionlistenskts = new HashMap();
     }
+
+    private void closeChannels(){
+        this.dockskt.close();
+        this.addexportskt.close();
+        this.addimportskt.close();
+        for (Map.Entry<String, ZMQ.Socket> entry : this.exportedskts.entrySet())
+        {
+            entry.getValue().close();
+        }
+
+        for (Map.Entry<String, ZMQ.Socket> entry : this.requestskts.entrySet())
+        {
+            entry.getValue().close();
+        }
+        for (Map.Entry<String, ZMQ.Socket> entry : this.functionlistenskts.entrySet())
+        {
+            entry.getValue().close();
+        }
+    }
     @Override
     public void preStart() throws Exception {
         this.skt = this.ctx.socket(ZMQ.ROUTER);
         String connection = "tcp://127.0.0.1:"+String.format("%d",this.port);
         System.out.println(connection);
         this.skt.bind(connection);
+        this.skt.setReceiveTimeOut(1000);
         this.setupChannels();
     }
 
     @Override
     public void onReceive(Object message) throws Exception {
+        try {
+            String senderid = this.receiveMsgPart();
+            String msgtypestring = this.receiveMsgPart();
+            String codec = this.receiveMsgPart();
+            String encmsg = this.receiveMsgPart();
+            this.receiveMsgPart();
+            this.receiveMsgPart();
+            this.receiveMsgPart();
+            System.out.println(encmsg);
+            this.processMsg(msgtypestring, codec, encmsg);
+        } catch (Exception e){
 
-        String senderid = this.receiveMsgPart();
-        String msgtypestring = this.receiveMsgPart();
-        String codec = this.receiveMsgPart();
-        String encmsg = this.receiveMsgPart();
-        this.receiveMsgPart();
-        this.receiveMsgPart();
-        this.receiveMsgPart();
-        System.out.println(encmsg);
-        this.processMsg(msgtypestring,codec,encmsg);
+        }
+
         getSelf().tell("",getSelf());
+    }
+
+    @Override
+    public void postStop() throws Exception {
+        this.skt.close();
+        this.closeChannels();
+        System.out.println("Closed incoming actor");
+
+        super.postStop();
     }
 
     private String receiveMsgPart(){
@@ -121,8 +157,8 @@ public class IncomingAgent extends UntypedActor {
                 jobid jid = gson.fromJson(msg,jobid.class);
                 ZMQ.Socket skt = this.ctx.socket(ZMQ.PAIR);
                 skt.connect("inproc://result" + jid.Uuid);
-
                 skt.send(msg);
+                skt.close();
             break;
 
         }

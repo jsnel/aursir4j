@@ -2,17 +2,17 @@ package org.aursir.aursir4j;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
-import org.aursir.HelloWorld;
 import org.aursir.aursir4j.agent.IncomingAgent;
 import org.aursir.aursir4j.agent.OutgoingAgent;
 import org.aursir.aursir4j.messages.AddExportMessage;
 import org.aursir.aursir4j.messages.AddImportMessage;
 import org.aursir.aursir4j.messages.DockMessage;
 import org.zeromq.ZMQ;
+import scala.util.parsing.combinator.testing.Str;
 
-import javax.lang.model.element.Name;
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -35,19 +35,20 @@ public class Interface {
     private ZMQ.Socket dockskt;
     private ZMQ.Socket addexportskt;
     private ZMQ.Socket addimportskt;
-    private Map exportedskts;
-    private Map resultskts;
-    private Map requestskts;
+
+    private Map<String,ImportedAppkey> imports;
+    private Map<String,ExportedAppkey> exports;
 
     public Interface(final String name){
-      //  this.inChan = ctx.socket(ZMQ.PAIR);
-       // this.outChan = ctx.socket(ZMQ.PAIR);
         this.setupChannels();
         try {
             this.launchActor(name);
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        this.imports= new HashMap<String, ImportedAppkey>();
+        this.exports= new HashMap<String, ExportedAppkey>();
 
         this.dock();
         String docked = this.dockskt.recvStr();
@@ -64,11 +65,12 @@ public class Interface {
         this.outChan.tell(m, ActorRef.noSender());
         String eid = this.addexportskt.recvStr();
         ExportedAppkey ea = new ExportedAppkey(eid,this.ctx,this.outChan);
+        this.exports.put(eid,ea);
         return ea;
     }
     public ImportedAppkey AddImport(AppKey key){
         String[] tags = new String[]{};
-        return this.AddImport(key,tags);
+        return this.AddImport(key, tags);
     }
 
     public ImportedAppkey AddImport(AppKey key, String[] tags){
@@ -76,6 +78,7 @@ public class Interface {
         this.outChan.tell(m, ActorRef.noSender());
         String iid = this.addimportskt.recvStr();
         ImportedAppkey ia = new ImportedAppkey(iid,key,tags,this.ctx,this.outChan);
+        this.imports.put(iid,ia);
         return ia;
     }
 
@@ -86,6 +89,11 @@ public class Interface {
         this.addexportskt.bind("inproc://addexport");
         this.addimportskt = this.ctx.socket(ZMQ.PAIR);
         this.addimportskt.bind("inproc://addimport");
+    }
+    private void closeChannels(){
+        this.dockskt.close();
+        this.addexportskt.close();
+        this.addimportskt.close();
     }
 
     private void dock() {
@@ -105,6 +113,23 @@ public class Interface {
 
     public void stop(){
         this.system.shutdown();
+        this.system.awaitTermination();
+        System.out.println("terminated");
+
+        this.closeChannels();
+        System.out.println("chan closed");
+
+        for (Map.Entry<String, ImportedAppkey> entry : this.imports.entrySet())
+        {
+            entry.getValue().Remove();
+        }
+        for (Map.Entry<String, ExportedAppkey> entry : this.exports.entrySet())
+        {
+            entry.getValue().Remove();
+        }
+        this.ctx.term();
+        System.out.println("ctx closed");
+
     }
 
     private int getFreePort() throws IOException {
@@ -113,6 +138,5 @@ public class Interface {
         s.close();
         return port;
     }
-
 }
 

@@ -1,4 +1,4 @@
-package org.aursir;
+package example;
 
 public  class hellorreq {
     public String Greeting;

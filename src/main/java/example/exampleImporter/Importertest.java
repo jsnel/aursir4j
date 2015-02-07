@@ -1,9 +1,12 @@
 package example.exampleImporter;
 
 
+import example.hellorrep;
 import org.aursir.aursir4j.*;
 import org.aursir.aursir4j.messages.*;
-import org.aursir.hellorreq;
+import example.hellorreq;
+import org.zeromq.ZMQ;
+import zmq.Pair;
 
 public class Importertest {
 
@@ -41,13 +44,16 @@ public class Importertest {
         System.out.println(rep.Answer);
 
         try {
-            Thread.sleep(20000);
+            Thread.sleep(1000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
         System.out.println("Stopping");
 
-       iface.stop();
+        iface.stop();
+
+        System.out.println("Stopped");
+
     }
 
 
