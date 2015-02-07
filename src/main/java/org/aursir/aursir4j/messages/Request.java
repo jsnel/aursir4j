@@ -68,6 +68,11 @@ public class Request implements Message {
     }
 
     public Result WaitForResult(){
+
+        if (this.resultsock == null) {
+            return null;
+        }
+
         String reqm = this.resultsock.recvStr();
         Gson gson = new Gson();
         Result r = gson.fromJson(reqm, Result.class);

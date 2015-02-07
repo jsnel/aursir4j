@@ -2,8 +2,10 @@ package org.aursir.aursir4j;
 
 import akka.actor.ActorRef;
 import com.google.gson.Gson;
+import org.aursir.aursir4j.messages.ListenMessage;
 import org.aursir.aursir4j.messages.Request;
 import org.aursir.aursir4j.messages.Result;
+import org.aursir.aursir4j.messages.StopListenMessage;
 import org.zeromq.ZMQ;
 
 import java.util.UUID;
@@ -31,7 +33,16 @@ public class ImportedAppkey {
         this.tags = tags;
         this.ctx = ctx;
         this.listenskt = ctx.socket(ZMQ.PAIR);
-        this.listenskt.connect("inproc://listen" + importid);
+
+        this.listenskt.connect("inproc://functionlisten" + importid);
+    }
+
+    public void listenToFunction(String FunctionName){
+        this.outChan.tell(new ListenMessage(this.importid, FunctionName), ActorRef.noSender());
+    }
+
+    public void stopListenToFunction(String FunctionName){
+        this.outChan.tell(new StopListenMessage(this.importid, FunctionName), ActorRef.noSender());
     }
 
     public Result Listen(){
@@ -41,12 +52,12 @@ public class ImportedAppkey {
     }
 
     public Request CallFunction(String functionName,Object request, int callType) {
-
+        ZMQ.Socket resultskt = null;
         String uuid = UUID.randomUUID().toString();
-
-        ZMQ.Socket resultskt = ctx.socket(ZMQ.PAIR);
-        resultskt.bind("inproc://result" + uuid);
-
+        if (callType == calltypes.ONE2ONE.ordinal() || callType == calltypes.ONE2MANY.ordinal()) {
+            resultskt = ctx.socket(ZMQ.PAIR);
+            resultskt.bind("inproc://result" + uuid);
+        }
         Request req = new Request(this.appKey.ApplicationKeyName,functionName,uuid,this.importid,
                 callType,this.tags, request,resultskt);
 

@@ -20,7 +20,7 @@ public class AppKey {
         }
     }
 
-    public AppKey fromJson(String json) {
+    public static AppKey fromJson(String json) {
         Gson gson = new Gson();
         AppKey key = gson.fromJson(json, AppKey.class);
         return key;

@@ -4,6 +4,7 @@ import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.japi.Creator;
 import com.google.gson.Gson;
+import org.aursir.aursir4j.calltypes;
 import org.aursir.aursir4j.messages.DockedMessage;
 import org.aursir.aursir4j.messages.ExportAddedMessage;
 import org.aursir.aursir4j.messages.ImportAddedMessage;
@@ -81,7 +82,6 @@ public class IncomingAgent extends UntypedActor {
     public void preStart() throws Exception {
         this.skt = this.ctx.socket(ZMQ.ROUTER);
         String connection = "tcp://127.0.0.1:"+String.format("%d",this.port);
-        System.out.println(connection);
         this.skt.bind(connection);
         this.skt.setReceiveTimeOut(1000);
         this.setupChannels();
@@ -97,7 +97,6 @@ public class IncomingAgent extends UntypedActor {
             this.receiveMsgPart();
             this.receiveMsgPart();
             this.receiveMsgPart();
-            System.out.println(encmsg);
             this.processMsg(msgtypestring, codec, encmsg);
         } catch (Exception e){
 
@@ -153,12 +152,17 @@ public class IncomingAgent extends UntypedActor {
                 this.requestskts.get(exid.ExportId).send(msg);
             break;
             case RESULT:
-
-                jobid jid = gson.fromJson(msg,jobid.class);
-                ZMQ.Socket skt = this.ctx.socket(ZMQ.PAIR);
-                skt.connect("inproc://result" + jid.Uuid);
-                skt.send(msg);
-                skt.close();
+                incomingjob job = gson.fromJson(msg, incomingjob.class);
+                if (job.CallType == calltypes.ONE2ONE.ordinal() || job.CallType == calltypes.ONE2MANY.ordinal()) {
+                    ZMQ.Socket skt = this.ctx.socket(ZMQ.PAIR);
+                    skt.connect("inproc://result" + job.Uuid);
+                    skt.send(msg);
+                    if (job.CallType == calltypes.ONE2ONE.ordinal()) {
+                        skt.close();
+                    }
+                } else {
+                  this.functionlistenskts.get(job.ImportId).send(msg);
+                }
             break;
 
         }
@@ -190,7 +194,10 @@ public class IncomingAgent extends UntypedActor {
     private class exportid {
         public String ExportId;
     }
-    private class jobid {
+    private class incomingjob {
         public String Uuid;
+        public String ImportId;
+        public int CallType;
+
     }
 }

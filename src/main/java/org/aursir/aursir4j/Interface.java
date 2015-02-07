@@ -52,7 +52,6 @@ public class Interface {
 
         this.dock();
         String docked = this.dockskt.recvStr();
-        System.out.println(docked);
 
     }
 
@@ -114,10 +113,8 @@ public class Interface {
     public void stop(){
         this.system.shutdown();
         this.system.awaitTermination();
-        System.out.println("terminated");
 
         this.closeChannels();
-        System.out.println("chan closed");
 
         for (Map.Entry<String, ImportedAppkey> entry : this.imports.entrySet())
         {
@@ -128,7 +125,6 @@ public class Interface {
             entry.getValue().Remove();
         }
         this.ctx.term();
-        System.out.println("ctx closed");
 
     }
 
